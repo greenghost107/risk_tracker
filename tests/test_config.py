@@ -24,6 +24,38 @@ def test_load_config_happy_path(tmp_path):
     assert config.account_size == Decimal("25000")
 
 
+def test_load_config_falls_back_to_environment_variables(tmp_path, monkeypatch):
+    # No .env file at all -- mirrors a hosted platform (e.g. Streamlit
+    # Community Cloud "Secrets") that exposes config via os.environ instead.
+    monkeypatch.setenv("NOTION_URL", "https://notion.so/Week-abc123")
+    monkeypatch.setenv("NOTION_TOKEN", "ntn_secret")
+    monkeypatch.setenv("ACCOUNT_SIZE", "18000")
+
+    config = load_config(tmp_path / "nonexistent.env")
+
+    assert config.notion_url == "https://notion.so/Week-abc123"
+    assert config.notion_token == "ntn_secret"
+    assert config.account_size == Decimal("18000")
+
+
+def test_load_config_env_file_overrides_environment_variables(tmp_path, monkeypatch):
+    monkeypatch.setenv("NOTION_URL", "https://notion.so/from-env-var")
+    monkeypatch.setenv("NOTION_TOKEN", "ntn_from_env_var")
+    monkeypatch.setenv("ACCOUNT_SIZE", "1")
+
+    path = write_env(
+        tmp_path,
+        "NOTION_URL=https://notion.so/from-file\n"
+        "NOTION_TOKEN=ntn_from_file\n"
+        "ACCOUNT_SIZE=25000\n",
+    )
+    config = load_config(path)
+
+    assert config.notion_url == "https://notion.so/from-file"
+    assert config.notion_token == "ntn_from_file"
+    assert config.account_size == Decimal("25000")
+
+
 def test_load_config_is_case_insensitive_for_keys(tmp_path):
     path = write_env(
         tmp_path,

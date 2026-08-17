@@ -6,6 +6,7 @@ silently corrupt every risk figure in the table.
 
 from __future__ import annotations
 
+import os
 import sys
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
@@ -30,10 +31,16 @@ class Config:
 
 
 def _load_raw(env_path: Path) -> dict[str, str]:
-    values = dotenv_values(env_path)
+    # Real environment variables first -- this is how hosted platforms
+    # (e.g. Streamlit Community Cloud "Secrets") deliver config, since there
+    # is no .env file on disk there. A local .env file, if present, overrides
+    # them, which keeps local development working exactly as before.
+    raw = {k.upper(): v for k, v in os.environ.items()}
+    file_values = dotenv_values(env_path)
+    raw.update({k.upper(): v for k, v in file_values.items() if k is not None and v is not None})
     # Keys are matched case-insensitively so `notion_url` and `NOTION_URL`
     # are treated the same; the last-seen value for a given uppercased key wins.
-    return {k.upper(): v for k, v in values.items() if k is not None}
+    return raw
 
 
 def load_config(env_path: Path | str = ".env") -> Config:
