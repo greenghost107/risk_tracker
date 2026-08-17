@@ -1,0 +1,17 @@
+KKK
+
+10 @ 100
+
+stop-loss: 95
+
+LLL
+
+5 @ 50
+
+stop-loss: 48
+
+KKK
+
+3 @ 90
+
+stop-loss: 85

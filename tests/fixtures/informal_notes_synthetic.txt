@@ -1,0 +1,71 @@
+AAAA
+
+12 @ 50
+
+initial stop-loss: 45
+
+3 @ 55
+
+initial stop loss: 52
+
+stop loss - ema20 - 53
+
+BBBB
+
+21 @ 30
+
+initial stop-loss: 28
+
+stop-loss - ema20 -  31
+
+CCCC
+
+12 @ 40
+
+initial stop-loss: 36
+
+adjusted stop-loss: 39
+
+3 @ 41
+
+stop-loss: 38
+
+DDDD
+
+34 @ 20
+
+initial stop-loss: 18
+
+stop-loss: 21
+
+EEEE
+
+6 @ 100
+
+initial stop-loss: 95
+
+6 @ 99
+
+initial stop-loss: 96
+
+stop loss at gapup AVWAP
+
+stop-loss:  97
+
+FFFF
+
+7 @ 70
+
+stop-loss: 65
+
+GGGG
+
+30 @ 25
+
+stop-loss: 23
+
+HHHH
+
+3 @ 300
+
+stop-loss: 290

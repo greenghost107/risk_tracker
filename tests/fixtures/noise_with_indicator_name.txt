@@ -1,0 +1,7 @@
+NNN
+
+10 @ 50
+
+stop loss follows ema20
+
+stop-loss: 48

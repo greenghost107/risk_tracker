@@ -1,0 +1,7 @@
+DDD
+
+10 @ 50
+
+stop-loss:
+
+stop-loss: 48

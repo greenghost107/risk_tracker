@@ -1,0 +1,13 @@
+FFF
+
+10 @ 60
+
+initial stop-loss: 55
+
+stop-loss: 58
+
+5 @ 62
+
+initial stop-loss:
+
+stop-loss: 59

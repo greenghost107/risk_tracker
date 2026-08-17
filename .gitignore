@@ -1,0 +1,13 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+*.log
+.claude/settings.local.json
+.claude/*
+
+# real trading data, not fit for a public fixture -- see
+# tests/fixtures/informal_notes_synthetic.txt for the synthetic equivalent
+positions_example.md
+tests/fixtures/real_positions.txt

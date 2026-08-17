@@ -1,0 +1,35 @@
+ASML
+
+1 @ 1397.86
+
+stop-loss: 1393.00
+
+NVT
+
+10 @ 114.62
+
+stop-loss: 112.39
+
+BKV
+
+40 @ 30.11
+
+stop-loss: 29.31
+
+VIK
+
+16 @ 74.82
+
+stop-loss: 72.26
+
+WBI
+
+40 @ 26.01
+
+stop-loss: 25.47
+
+Q
+
+4 @ 118.30
+
+stop-loss: 111.02

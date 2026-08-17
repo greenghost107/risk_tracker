@@ -1,0 +1,29 @@
+AAA
+
+10 @ 100
+
+initial stop-loss: 95
+
+stop-loss: 98
+
+5 @ 110
+
+stop-loss: 105
+
+BBB
+
+20 @ 50
+
+initial stop-loss:
+
+15 @ 52
+
+some data
+
+stop-loss: 48
+
+CCC
+
+8 @ 200
+
+stop-loss: 190
