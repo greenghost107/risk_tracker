@@ -8,6 +8,8 @@ the pure row-status / styling logic this renders.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import streamlit as st
 
 from notion_risk.config import ConfigError, load_config
@@ -34,11 +36,27 @@ if "lines" not in st.session_state:
     st.session_state.lines = None
     st.session_state.fetch_error = None
 
-top_left, top_right = st.columns([1, 5])
-with top_left:
+# Seeded from .env / secrets on first load only; after that the widget's own
+# session-state entry (key="account_size") is the source of truth, so edits
+# survive reruns (sorting, refreshing) without snapping back to the .env value.
+if "account_size" not in st.session_state:
+    st.session_state.account_size = float(config.account_size)
+
+refresh_col, sort_col, account_col = st.columns([1, 2, 2])
+with refresh_col:
     refresh_clicked = st.button("Refresh from Notion", type="primary")
-with top_right:
+with sort_col:
     sort_key = st.selectbox("Sort by", ["page", "risk", "size"], index=0)
+with account_col:
+    st.number_input(
+        "Account size ($)",
+        min_value=0.01,
+        step=100.0,
+        format="%.2f",
+        key="account_size",
+    )
+
+account_size = Decimal(str(st.session_state.account_size))
 
 if refresh_clicked or st.session_state.lines is None:
     st.session_state.fetch_error = None
@@ -62,9 +80,9 @@ except ParseError as exc:
     st.error(f"Parse error: {exc}")
     st.stop()
 
-rows = compute_rows(parsed.positions, config.account_size)
+rows = compute_rows(parsed.positions, account_size)
 rows = sort_rows(rows, sort_key)
-totals = compute_totals(rows, config.account_size)
+totals = compute_totals(rows, account_size)
 
 heat_col, exposure_col, symbols_col, unresolved_col = st.columns(4)
 heat_col.metric("Portfolio heat", f"{totals.total_risk_pct * 100:.2f}%")
