@@ -12,7 +12,7 @@ Reads a weekly Notion positions page and prints a portfolio risk table. See
    (or share it on the page's parent) so it can read the page. This is a
    one-time manual step per page/workspace.
 4. Copy `.env.example` to `.env` and fill in `NOTION_URL`, `NOTION_TOKEN`,
-   and `ACCOUNT_SIZE`. `.env` is gitignored — never commit it.
+   and `ACCOUNT_SIZE`. `.env` is gitignored - never commit it.
 
 ## Run
 
@@ -22,12 +22,12 @@ python main.py
 
 Optional flags:
 
-- `--csv PATH` — write unrounded rows to a CSV file
-- `--json PATH` — write structured output to a JSON file
-- `--sort {page,risk,size}` — row order (default `page`)
-- `--verbose` — echo each line's parser classification, useful when a page
+- `--csv PATH` - write unrounded rows to a CSV file
+- `--json PATH` - write structured output to a JSON file
+- `--sort {page,risk,size}` - row order (default `page`)
+- `--verbose` - echo each line's parser classification, useful when a page
   parses oddly
-- `--env-file PATH` — use a `.env` file other than the default
+- `--env-file PATH` - use a `.env` file other than the default
 
 ## Dashboard
 

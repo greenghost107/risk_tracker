@@ -155,10 +155,24 @@ class _Parser:
         return ParseResult(positions=self.positions, warnings=self.warnings)
 
 
+def _split_embedded_newlines(lines: list[str]) -> list[str]:
+    """A Notion block joined by a soft line break (shift+Enter, rather than
+    a new block) arrives as one flattened entry containing a literal "\\n",
+    e.g. "30 @ 54.68\\nstop-loss: 51.74". None of the classifier regexes are
+    anchored to end-of-string, so without this split, LOT would match just
+    the first physical line and silently drop the rest -- losing a real
+    stop-loss. Splitting first makes every downstream rule see one logical
+    line per element, regardless of how it was joined upstream."""
+    flattened: list[str] = []
+    for line in lines:
+        flattened.extend(line.split("\n"))
+    return flattened
+
+
 def parse_lines(lines: list[str]) -> ParseResult:
     """Parse flattened Notion text lines into positions plus warnings.
 
     Raises ParseError on the two hard-stop conditions from PRD §6: a lot
     line before any symbol heading, and a duplicate symbol heading.
     """
-    return _Parser().run(lines)
+    return _Parser().run(_split_embedded_newlines(lines))

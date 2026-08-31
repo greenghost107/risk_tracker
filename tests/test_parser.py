@@ -35,7 +35,7 @@ def test_classify_line(line, expected):
 
 def test_initial_stop_tested_before_stop():
     # If STOP were tested first, this would be misclassified as STOP with
-    # the "initial " prefix left dangling — order in classify_line matters.
+    # the "initial " prefix left dangling - order in classify_line matters.
     line_class, _ = classify_line("initial stop-loss: 156")
     assert line_class is LineClass.INITIAL_STOP
 
@@ -219,6 +219,32 @@ def test_noise_line_with_standalone_number_does_warn(line):
 def test_noise_line_without_standalone_number_does_not_warn(line):
     result = parse_lines(["ZZZ", "1 @ 100", line, "stop-loss: 95"])
     assert result.warnings == []
+
+
+def test_lot_and_stop_joined_by_a_soft_line_break_in_one_block():
+    # A Notion block joined by shift+Enter (soft break) rather than a new
+    # block arrives as ONE flattened entry containing a literal "\n" -- e.g.
+    # "30 @ 54.68\nstop-loss: 51.74". Neither LOT nor STOP's regex is
+    # anchored to end-of-string, so without splitting this first, LOT would
+    # match just the first physical line and silently drop the stop-loss.
+    lines = ["FOOX", "30 @ 54.68\nstop-loss: 51.74"]
+    result = parse_lines(lines)
+    assert len(result.positions) == 1
+    pos = result.positions[0]
+    assert pos.symbol == "FOOX"
+    assert pos.lots == [(Decimal("30"), Decimal("54.68"))]
+    assert pos.stop_loss == Decimal("51.74")
+    assert result.warnings == []
+
+
+def test_symbol_and_lot_joined_by_a_soft_line_break_in_one_block():
+    lines = ["FOOX\n30 @ 54.68", "stop-loss: 51.74"]
+    result = parse_lines(lines)
+    assert len(result.positions) == 1
+    pos = result.positions[0]
+    assert pos.symbol == "FOOX"
+    assert pos.lots == [(Decimal("30"), Decimal("54.68"))]
+    assert pos.stop_loss == Decimal("51.74")
 
 
 # --- hard-stop error conditions (exit code 6) ----------------------------
