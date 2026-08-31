@@ -118,3 +118,80 @@ def test_load_config_non_positive_account_size_raises(tmp_path, bad_value):
 
 def test_config_error_exit_code():
     assert ConfigError.exit_code == 1
+
+
+# --- require_account_size=False (Streamlit dashboard: has its own UI input) --
+
+
+def test_load_config_account_size_optional_when_not_required(tmp_path):
+    path = write_env(
+        tmp_path,
+        "NOTION_URL=https://notion.so/Week-abc123\nNOTION_TOKEN=ntn_secret\n",
+    )
+    config = load_config(path, require_account_size=False)
+    assert config.account_size is None
+    assert config.notion_url == "https://notion.so/Week-abc123"
+
+
+def test_load_config_account_size_still_used_when_present_and_not_required(tmp_path):
+    path = write_env(
+        tmp_path,
+        "NOTION_URL=https://notion.so/Week-abc123\n"
+        "NOTION_TOKEN=ntn_secret\n"
+        "ACCOUNT_SIZE=25000\n",
+    )
+    config = load_config(path, require_account_size=False)
+    assert config.account_size == Decimal("25000")
+
+
+def test_load_config_account_size_still_validated_when_present_and_not_required(tmp_path):
+    path = write_env(
+        tmp_path,
+        "NOTION_URL=https://notion.so/Week-abc123\n"
+        "NOTION_TOKEN=ntn_secret\n"
+        "ACCOUNT_SIZE=-5\n",
+    )
+    with pytest.raises(ConfigError, match="positive"):
+        load_config(path, require_account_size=False)
+
+
+def test_load_config_still_requires_notion_keys_when_account_size_not_required(tmp_path):
+    path = write_env(tmp_path, "NOTION_URL=https://notion.so/Week-abc123\n")
+    with pytest.raises(ConfigError, match="NOTION_TOKEN"):
+        load_config(path, require_account_size=False)
+
+
+# --- require_notion_url=False (Streamlit dashboard: has its own UI input) ----
+
+
+def test_load_config_notion_url_optional_when_not_required(tmp_path):
+    path = write_env(tmp_path, "NOTION_TOKEN=ntn_secret\nACCOUNT_SIZE=25000\n")
+    config = load_config(path, require_notion_url=False)
+    assert config.notion_url is None
+    assert config.notion_token == "ntn_secret"
+    assert config.account_size == Decimal("25000")
+
+
+def test_load_config_notion_url_still_used_when_present_and_not_required(tmp_path):
+    path = write_env(
+        tmp_path,
+        "NOTION_URL=https://notion.so/Week-abc123\n"
+        "NOTION_TOKEN=ntn_secret\n"
+        "ACCOUNT_SIZE=25000\n",
+    )
+    config = load_config(path, require_notion_url=False)
+    assert config.notion_url == "https://notion.so/Week-abc123"
+
+
+def test_load_config_still_requires_notion_token_when_notion_url_not_required(tmp_path):
+    path = write_env(tmp_path, "ACCOUNT_SIZE=25000\n")
+    with pytest.raises(ConfigError, match="NOTION_TOKEN"):
+        load_config(path, require_notion_url=False)
+
+
+def test_load_config_both_account_size_and_notion_url_optional(tmp_path):
+    path = write_env(tmp_path, "NOTION_TOKEN=ntn_secret\n")
+    config = load_config(path, require_notion_url=False, require_account_size=False)
+    assert config.notion_url is None
+    assert config.account_size is None
+    assert config.notion_token == "ntn_secret"

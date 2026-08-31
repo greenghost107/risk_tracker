@@ -1,7 +1,13 @@
 """Load and validate .env configuration (PRD §4).
 
-Never falls back to a default account size: a wrong denominator would
-silently corrupt every risk figure in the table.
+The CLI never falls back to a default account size or page URL: a wrong
+denominator would silently corrupt every risk figure in the table, and a
+stale URL would silently read the wrong week's page. The Streamlit
+dashboard is the exception -- it has its own account-size and page-URL
+inputs in the UI, so ACCOUNT_SIZE and NOTION_URL there are just optional
+seed values (pass require_account_size=False / require_notion_url=False),
+not hard requirements to boot the app. NOTION_TOKEN never changes week to
+week, so it stays required in both.
 """
 
 from __future__ import annotations
@@ -14,7 +20,7 @@ from pathlib import Path
 
 from dotenv import dotenv_values
 
-REQUIRED_KEYS = ("NOTION_URL", "NOTION_TOKEN", "ACCOUNT_SIZE")
+REQUIRED_KEYS = ("NOTION_TOKEN",)
 
 
 class ConfigError(Exception):
@@ -25,9 +31,9 @@ class ConfigError(Exception):
 
 @dataclass
 class Config:
-    notion_url: str
+    notion_url: str | None
     notion_token: str
-    account_size: Decimal
+    account_size: Decimal | None
 
 
 def _load_raw(env_path: Path) -> dict[str, str]:
@@ -43,7 +49,12 @@ def _load_raw(env_path: Path) -> dict[str, str]:
     return raw
 
 
-def load_config(env_path: Path | str = ".env") -> Config:
+def load_config(
+    env_path: Path | str = ".env",
+    *,
+    require_account_size: bool = True,
+    require_notion_url: bool = True,
+) -> Config:
     env_path = Path(env_path)
     raw = _load_raw(env_path)
 
@@ -51,24 +62,48 @@ def load_config(env_path: Path | str = ".env") -> Config:
         if not raw.get(key, "").strip():
             raise ConfigError(f"missing or empty required config key: {key}")
 
-    account_size_str = raw["ACCOUNT_SIZE"].strip()
-    try:
-        account_size = Decimal(account_size_str)
-    except InvalidOperation as exc:
-        raise ConfigError(f"ACCOUNT_SIZE is not a valid number: '{account_size_str}'") from exc
-    if account_size <= 0:
-        raise ConfigError(f"ACCOUNT_SIZE must be a positive number, got: {account_size}")
+    notion_url_str = raw.get("NOTION_URL", "").strip()
+    notion_url: str | None
+    if not notion_url_str:
+        if require_notion_url:
+            raise ConfigError("missing or empty required config key: NOTION_URL")
+        notion_url = None
+    else:
+        notion_url = notion_url_str
+
+    account_size_str = raw.get("ACCOUNT_SIZE", "").strip()
+    account_size: Decimal | None
+    if not account_size_str:
+        if require_account_size:
+            raise ConfigError("missing or empty required config key: ACCOUNT_SIZE")
+        account_size = None
+    else:
+        try:
+            account_size = Decimal(account_size_str)
+        except InvalidOperation as exc:
+            raise ConfigError(f"ACCOUNT_SIZE is not a valid number: '{account_size_str}'") from exc
+        if account_size <= 0:
+            raise ConfigError(f"ACCOUNT_SIZE must be a positive number, got: {account_size}")
 
     return Config(
-        notion_url=raw["NOTION_URL"].strip(),
+        notion_url=notion_url,
         notion_token=raw["NOTION_TOKEN"].strip(),
         account_size=account_size,
     )
 
 
-def load_config_or_exit(env_path: Path | str = ".env") -> Config:
+def load_config_or_exit(
+    env_path: Path | str = ".env",
+    *,
+    require_account_size: bool = True,
+    require_notion_url: bool = True,
+) -> Config:
     try:
-        return load_config(env_path)
+        return load_config(
+            env_path,
+            require_account_size=require_account_size,
+            require_notion_url=require_notion_url,
+        )
     except ConfigError as exc:
         print(f"Config error: {exc}", file=sys.stderr)
         sys.exit(exc.exit_code)
