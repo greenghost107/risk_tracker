@@ -270,3 +270,17 @@ def test_fractional_share_amount_raises(load_fixture):
 
 def test_parse_error_exit_code():
     assert ParseError.exit_code == 6
+
+
+def test_short_lot_with_stop_loss_above_entry():
+    result = parse_lines(["IWM", "", "-6 @ 276.33", "stop-loss: 279.13"])
+    assert result.warnings == []
+    assert len(result.positions) == 1
+    pos = result.positions[0]
+    assert pos.lots == [(Decimal("-6"), Decimal("276.33"))]
+    assert pos.stop_loss == Decimal("279.13")
+
+
+def test_mixed_long_and_short_lots_raise():
+    with pytest.raises(ParseError, match="long and short"):
+        parse_lines(["IWM", "-6 @ 276.33", "5 @ 270", "stop-loss: 279"])

@@ -23,7 +23,7 @@ class LineClass(Enum):
 
 _INITIAL_STOP_RE = re.compile(r"^initial\s+stop[-\s]?loss\s*:", re.IGNORECASE)
 _STOP_RE = re.compile(r"^stop[-\s]?loss\s*:\s*\$?([\d,]*\.?\d+)?", re.IGNORECASE)
-_LOT_RE = re.compile(r"^(\d+(?:\.\d+)?)\s*@\s*\$?([\d,]*\.?\d+)")
+_LOT_RE = re.compile(r"^(-?\d+(?:\.\d+)?)\s*@\s*\$?([\d,]*\.?\d+)")
 _SYMBOL_RE = re.compile(r"^[A-Z][A-Z.\-]{0,6}$")
 # A standalone numeric token, e.g. "186.42" or "1,397.86" -- but not digits
 # embedded in a word like "ema20" or "sma200" (no \w boundary around them),
@@ -110,7 +110,12 @@ class _Parser:
             raise ParseError(
                 f"line {line_no}: fractional share amount not allowed: '{line}'"
             )
-        self.open_lots.append((_parse_decimal(amount_str), _parse_decimal(price_str)))
+        amount = _parse_decimal(amount_str)  # negative amount = short
+        if self.open_lots and (amount < 0) != (self.open_lots[0][0] < 0):
+            raise ParseError(
+                f"line {line_no}: long and short lots mixed in one group: '{line}'"
+            )
+        self.open_lots.append((amount, _parse_decimal(price_str)))
 
     def _handle_stop(self, match: re.Match, line_no: int) -> None:
         price_str = match.group(1)

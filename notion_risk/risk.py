@@ -46,7 +46,9 @@ def _weighted_avg_price(lots: list[tuple[Decimal, Decimal]]) -> Decimal:
 def compute_row(position: ParsedPosition) -> RiskRow:
     amount = sum(a for a, _ in position.lots)
     avg_price = _weighted_avg_price(position.lots)
-    pos_size = avg_price * amount
+    pos_size = avg_price * abs(amount)
+    # Negative amount = short: profit when price falls, so risk flips sign.
+    direction = -1 if amount < 0 else 1
 
     if position.stop_loss is None:
         return RiskRow(
@@ -63,9 +65,9 @@ def compute_row(position: ParsedPosition) -> RiskRow:
             locked_in_gain=False,
         )
 
-    dollar_risk = avg_price - position.stop_loss
+    dollar_risk = (avg_price - position.stop_loss) * direction
     risk_percentage = dollar_risk / avg_price
-    risk_for_position = dollar_risk * amount
+    risk_for_position = dollar_risk * abs(amount)
     locked_in_gain = dollar_risk < 0
 
     if locked_in_gain:

@@ -127,3 +127,28 @@ def test_totals_exclude_unresolved_and_locked_in_gain_from_heat():
     assert ccc.dollar_risk == Decimal("-5")  # still signed, shows the cushion
     assert ccc.risk_for_position == Decimal("0")
     assert ccc.risk == Decimal("0")
+
+
+def test_compute_row_short_risk_is_stop_above_entry():
+    position = ParsedPosition(
+        symbol="IWM",
+        lots=[(Decimal("-6"), Decimal("276.33"))],
+        stop_loss=Decimal("279.13"),
+    )
+    row = compute_row(position)
+    assert row.avg_price == Decimal("276.33")
+    assert row.pos_size == Decimal("1657.98")
+    assert row.dollar_risk == Decimal("2.80")
+    assert row.risk_for_position == Decimal("16.80")
+    assert not row.locked_in_gain
+
+
+def test_compute_row_short_stop_below_entry_is_locked_in_gain():
+    position = ParsedPosition(
+        symbol="IWM",
+        lots=[(Decimal("-6"), Decimal("276.33"))],
+        stop_loss=Decimal("270"),
+    )
+    row = compute_row(position)
+    assert row.locked_in_gain
+    assert row.risk_for_position == Decimal(0)
